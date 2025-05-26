@@ -25,7 +25,7 @@ if st.button("Organizar Prescrição"):
         categoria = classificacao.get(item.strip(), "Prescrição")
         dados[categoria].append(item)
 
-    # Ajustar para mesmo número de linhas
+    # Garantir que todas as colunas tenham o mesmo número de linhas
     max_len = max(len(v) for v in dados.values())
     for key in dados:
         while len(dados[key]) < max_len:
@@ -33,4 +33,4 @@ if st.button("Organizar Prescrição"):
 
     df = pd.DataFrame(dados)
     st.success("Prescrição organizada com sucesso:")
-    st.dataframe(df
+    st.dataframe(df)
