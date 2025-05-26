@@ -1,7 +1,9 @@
 import streamlit as st
 import pandas as pd
 
-# Dicionário de redirecionamento
+st.set_page_config(page_title="Prescrição Médica", layout="wide")
+
+# Dicionário de classificação por palavra-chave
 classificacao = {
     "meropenem": "Antibiótico",
     "omeprazol": "Profilaxia de Úlcera",
@@ -10,27 +12,46 @@ classificacao = {
     "dipirona acm": "Medicamentos ACM"
 }
 
-# Lista de categorias
-categorias = ["Prescrição", "Dieta", "Antibiótico", "Profilaxia de Úlcera", "Profilaxia para TVP", "Medicamentos ACM"]
-dados = {categoria: [] for categoria in categorias}
+# Lista de categorias (com "Outros" incluído)
+categorias = [
+    "Dieta",
+    "Antibiótico",
+    "Profilaxia de Úlcera",
+    "Profilaxia para TVP",
+    "Medicamentos ACM",
+    "Outros"
+]
+
+# Inicializa session_state para armazenar os dados cumulativos
+if "dados" not in st.session_state:
+    st.session_state.dados = {categoria: [] for categoria in categorias}
 
 st.title("Organizador de Prescrição Médica")
+st.markdown("Digite um item por vez e ele será classificado automaticamente.")
 
-entrada = st.text_area("Digite os itens da prescrição (um por linha):")
+# Campo de entrada individual
+entrada = st.text_input("Item da prescrição:")
 
+# Botão para processar o item
 if st.button("Organizar Prescrição"):
-    linhas = entrada.lower().splitlines()
+    if entrada.strip():
+        item = entrada.strip().lower()
+        categoria = classificacao.get(item, "Outros")
+        st.session_state.dados[categoria].append(item)
+        st.success(f'"{item}" adicionado à categoria *{categoria}*.')
 
-    for item in linhas:
-        categoria = classificacao.get(item.strip(), "Prescrição")
-        dados[categoria].append(item)
+# Exibir a tabela com os dados organizados
+dados_ajustados = {}
 
-    # Garantir que todas as colunas tenham o mesmo número de linhas
-    max_len = max(len(v) for v in dados.values())
-    for key in dados:
-        while len(dados[key]) < max_len:
-            dados[key].append("")
+# Igualar número de linhas entre colunas
+max_linhas = max((len(itens) for itens in st.session_state.dados.values()), default=1)
 
-    df = pd.DataFrame(dados)
-    st.success("Prescrição organizada com sucesso:")
-    st.dataframe(df)
+for cat in categorias:
+    col = st.session_state.dados.get(cat, [])
+    while len(col) < max_linhas:
+        col.append("")
+    dados_ajustados[cat] = col
+
+df = pd.DataFrame(dados_ajustados)
+st.subheader("Prescrição Organizada")
+st.dataframe(df, use_container_width=True)
